@@ -1,12 +1,15 @@
 package entity
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Record struct {
 	ID        int               `json:"id"`
 	Data      map[string]string `json:"data"`
-	CreatedAt string            `json:"created_at"`
-	DeletedAt string            `json:"deleted_at"`
+	CreatedAt time.Time         `json:"created_at"`
+	DeletedAt time.Time         `json:"deleted_at"`
 }
 
 func (d *Record) Copy() Record {

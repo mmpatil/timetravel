@@ -62,7 +62,7 @@ func createDatabase() error {
 
 func createTable(db *sql.DB) error {
 	createRecordsTableSQL := `CREATE TABLE records (
-		"id" integer NOT NULL PRIMARY KEY,
+		"id" integer NOT NULL,
 		"data" TEXT,
 		"created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		"deleted_at" TIMESTAMP	
@@ -109,8 +109,8 @@ func (s *Storage) GetRecordByID(id int) (*entity.Record, error) {
 	row := statement.QueryRow(id)
 	record := &entity.Record{}
 	var data string
-	var nullableString sql.NullString
-	err = row.Scan(&record.ID, &data, &record.CreatedAt, &nullableString)
+	var nullableTime sql.NullTime
+	err = row.Scan(&record.ID, &data, &record.CreatedAt, &nullableTime)
 	log.Println(err)
 	if err != nil {
 		return nil, err
