@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/temelpa/timetravel/entity"
 )
 
 const databaseFile = "sqlite-database.db"
+const timestampFormat = "2006-01-02T15:04:05Z"
 
 type Storage struct {
 	db *sql.DB
@@ -110,17 +112,26 @@ func (s *Storage) GetRecordByID(id int) (*entity.Record, error) {
 	record := &entity.Record{}
 	var data string
 	var nullableTime sql.NullTime
-	err = row.Scan(&record.ID, &data, &record.CreatedAt, &nullableTime)
+	var timestampStr string
+	err = row.Scan(&record.ID, &data, &timestampStr, &nullableTime)
 	log.Println(err)
 	if err != nil {
 		return nil, err
 	}
+	log.Println(timestampStr)
+	timestamp, err := time.Parse(time.RFC3339, timestampStr)
+	log.Println(err)
+	if err != nil {
+		return nil, err
+	}
+	log.Println(timestamp)
 	log.Println(data)
 	err = json.Unmarshal([]byte(data), &record.Data)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+	record.CreatedAt = timestamp
 	return record, nil
 }
 

@@ -21,8 +21,10 @@ func (d *Record) Copy() Record {
 	}
 
 	return Record{
-		ID:   d.ID,
-		Data: newMap,
+		ID:        d.ID,
+		Data:      newMap,
+		CreatedAt: d.CreatedAt,
+		DeletedAt: d.DeletedAt,
 	}
 }
 
