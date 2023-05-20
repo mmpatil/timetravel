@@ -1,8 +1,12 @@
 package entity
 
+import "encoding/json"
+
 type Record struct {
-	ID   int               `json:"id"`
-	Data map[string]string `json:"data"`
+	ID        int               `json:"id"`
+	Data      map[string]string `json:"data"`
+	CreatedAt string            `json:"created_at"`
+	DeletedAt string            `json:"deleted_at"`
 }
 
 func (d *Record) Copy() Record {
@@ -17,4 +21,13 @@ func (d *Record) Copy() Record {
 		ID:   d.ID,
 		Data: newMap,
 	}
+}
+
+func (d *Record) ToString() string {
+	return string(d.ToJSON())
+}
+
+func (d *Record) ToJSON() []byte {
+	data, _ := json.Marshal(d)
+	return data
 }
