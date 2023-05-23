@@ -16,17 +16,30 @@ func NewDatabaseService(storage *storage.Storage) DatabaseService {
 	return DatabaseService{storage: storage}
 }
 
-func (s *DatabaseService) GetRecord(ctx context.Context, id int) (entity.Record, error) {
-	record, err := s.storage.GetRecordByID(id)
+func (s *DatabaseService) GetAllRecordsByID(ctx context.Context, id int) ([]entity.Record, error) {
+	records, err := s.storage.GetRecordsByID(id)
+	if err != nil {
+		return []entity.Record{}, err
+	}
+	if len(records) == 0 {
+		return []entity.Record{}, ErrRecordDoesNotExist
+	}
+	var newRecords []entity.Record
+	for _, record := range records {
+		newRecords = append(newRecords, record.Copy()) // copy is necessary so modifations to the record don't change the stored record
+	}
+	return newRecords, nil
+}
+
+func (s *DatabaseService) GetLastestRecordByID(ctx context.Context, id int) (entity.Record, error) {
+	record, err := s.storage.GetLastestRecordByID(id)
 	if err != nil {
 		return entity.Record{}, err
 	}
 	if record.ID == 0 {
 		return entity.Record{}, ErrRecordDoesNotExist
 	}
-
-	newRecord := record.Copy() // copy is necessary so modifations to the record don't change the stored record
-	return newRecord, nil
+	return record.Copy(), nil
 }
 
 func (s *DatabaseService) CreateRecord(ctx context.Context, record entity.Record) error {
@@ -64,7 +77,7 @@ func (s *DatabaseService) UpdateRecord(ctx context.Context, id int, updates map[
 		return entity.Record{}, ErrRecordDoesNotExist
 	}
 
-	updatedEntry, err := s.storage.GetRecordByID(id)
+	updatedEntry, err := s.storage.GetLastestRecordByID(id)
 	if err != nil {
 		return entity.Record{}, err
 	}

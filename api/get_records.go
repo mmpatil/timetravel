@@ -49,7 +49,7 @@ func (a *API) GetRecordsV2(w http.ResponseWriter, r *http.Request) {
 		logError(err)
 		return
 	}
-	record, err := a.recordsV2.GetRecord(ctx, int(idNumber))
+	record, err := a.recordsV2.GetAllRecordsByID(ctx, int(idNumber))
 	if err != nil {
 		err := writeError(w, fmt.Sprintf("record of id %v does not exist", idNumber), http.StatusBadRequest)
 		logError(err)
@@ -58,4 +58,35 @@ func (a *API) GetRecordsV2(w http.ResponseWriter, r *http.Request) {
 
 	err = writeJSON(w, record, http.StatusOK)
 	logError(err)
+}
+
+// GET /record/{id}
+// GetRecord retrieves the latest record.
+func (a *API) GetLastestRecordV2(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := mux.Vars(r)["id"]
+
+	idNumber, err := strconv.ParseInt(id, 10, 32)
+
+	if err != nil || idNumber <= 0 {
+		err := writeError(w, "invalid id; id must be a positive number", http.StatusBadRequest)
+		logError(err)
+		return
+	}
+
+	record, err := a.recordsV2.GetLastestRecordByID(
+		ctx,
+		int(idNumber),
+	)
+	if err != nil {
+		err := writeError(w, fmt.Sprintf("record of id %v does not exist", idNumber), http.StatusBadRequest)
+		logError(err)
+		return
+	}
+	err = writeJSON(w, record, http.StatusOK)
+	if err != nil {
+		err := writeError(w, fmt.Sprintf("record of id %v does not exist", idNumber), http.StatusBadRequest)
+		logError(err)
+		return
+	}
 }

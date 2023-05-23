@@ -98,7 +98,7 @@ func (s *Storage) InsertRecord(id int, data string) (int, error) {
 	return 0, nil
 }
 
-func (s *Storage) GetRecordByID(id int) (*entity.Record, error) {
+func (s *Storage) GetRecordsByID(id int) ([]*entity.Record, error) {
 	log.Println("Getting record...")
 	getRecordSQL := `SELECT id, data, created_at, deleted_at FROM records WHERE id = ?`
 
@@ -107,7 +107,49 @@ func (s *Storage) GetRecordByID(id int) (*entity.Record, error) {
 		return nil, err
 	}
 	defer statement.Close()
+	var records []*entity.Record
+	rows, err := statement.Query(id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		record := &entity.Record{}
+		var data string
+		var nullableTime sql.NullTime
+		var timestampStr string
+		err = rows.Scan(&record.ID, &data, &timestampStr, &nullableTime)
+		log.Println(err)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(timestampStr)
+		timestamp, err := time.Parse(time.RFC3339, timestampStr)
+		log.Println(err)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(timestamp)
+		log.Println(data)
+		err = json.Unmarshal([]byte(data), &record.Data)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		record.CreatedAt = timestamp
+		records = append(records, record)
+	}
+	return records, nil
+}
 
+func (s *Storage) GetLastestRecordByID(id int) (*entity.Record, error) {
+	log.Println("Getting latest record...")
+	getRecordSQL := `SELECT id, data, created_at, deleted_at FROM records WHERE id = ? ORDER BY created_at DESC LIMIT 1`
+
+	statement, err := s.db.Prepare(getRecordSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer statement.Close()
 	row := statement.QueryRow(id)
 	record := &entity.Record{}
 	var data string
@@ -132,6 +174,7 @@ func (s *Storage) GetRecordByID(id int) (*entity.Record, error) {
 		return nil, err
 	}
 	record.CreatedAt = timestamp
+
 	return record, nil
 }
 

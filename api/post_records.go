@@ -93,7 +93,7 @@ func (a *API) PostRecordsV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// first retrieve the record
-	record, err := a.recordsV2.GetRecord(ctx, int(idNumber))
+	record, err := a.recordsV2.GetLastestRecordByID(ctx, int(idNumber))
 
 	if err != nil {
 		// exclude the delete updates
@@ -118,7 +118,11 @@ func (a *API) PostRecordsV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newData := mergeMapData(body, record.Data)
-	updatedRecord, err := a.recordsV2.UpdateRecord(ctx, int(idNumber), newData)
+	updatedRecord := entity.Record{
+		ID:   int(idNumber),
+		Data: newData,
+	}
+	err = a.recordsV2.CreateRecord(ctx, updatedRecord)
 	if err != nil {
 		errInWriting := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
 		logError(err)
@@ -126,7 +130,12 @@ func (a *API) PostRecordsV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = writeJSON(w, updatedRecord, http.StatusOK)
-	logError(err)
+	if err != nil {
+		errInWriting := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
+		logError(err)
+		logError(errInWriting)
+		return
+	}
 }
 
 func mergeMapData(data map[string]*string, recordData map[string]string) map[string]string {
