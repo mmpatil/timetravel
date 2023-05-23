@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/temelpa/timetravel/entity"
 	"github.com/temelpa/timetravel/storage"
@@ -40,6 +41,21 @@ func (s *DatabaseService) GetLastestRecordByID(ctx context.Context, id int) (ent
 		return entity.Record{}, ErrRecordDoesNotExist
 	}
 	return record.Copy(), nil
+}
+
+func (s *DatabaseService) GetRecordsByIDBetweenTimestamp(ctx context.Context, id int, startTime, endTime time.Time) ([]entity.Record, error) {
+	records, err := s.storage.GetRecordsByIDBetweenTimestamp(id, startTime, endTime)
+	if err != nil {
+		return []entity.Record{}, err
+	}
+	if len(records) == 0 {
+		return []entity.Record{}, ErrRecordDoesNotExist
+	}
+	var newRecords []entity.Record
+	for _, record := range records {
+		newRecords = append(newRecords, record.Copy()) // copy is necessary so modifations to the record don't change the stored record
+	}
+	return newRecords, nil
 }
 
 func (s *DatabaseService) CreateRecord(ctx context.Context, record entity.Record) error {

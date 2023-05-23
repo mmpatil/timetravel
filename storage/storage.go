@@ -178,6 +178,50 @@ func (s *Storage) GetLastestRecordByID(id int) (*entity.Record, error) {
 	return record, nil
 }
 
+func (s *Storage) GetRecordsByIDBetweenTimestamp(id int, startTime, endTime time.Time) ([]*entity.Record, error) {
+	log.Println("Getting record...")
+	getRecordSQL := `SELECT id, data, created_at, deleted_at FROM records WHERE id = ? AND created_at BETWEEN ? AND ? ORDER BY created_at DESC`
+
+	statement, err := s.db.Prepare(getRecordSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer statement.Close()
+	var records []*entity.Record
+	rows, err := statement.Query(id, startTime, endTime)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		record := &entity.Record{}
+		var data string
+		var nullableTime sql.NullTime
+		var timestampStr string
+		err = rows.Scan(&record.ID, &data, &timestampStr, &nullableTime)
+		log.Println(err)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(timestampStr)
+		timestamp, err := time.Parse(time.RFC3339, timestampStr)
+		log.Println(err)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(timestamp)
+		log.Println(data)
+		err = json.Unmarshal([]byte(data), &record.Data)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		record.CreatedAt = timestamp
+		records = append(records, record)
+	}
+	return records, nil
+}
+
 func (s *Storage) UpdateRecord(id int, data string) (int, error) {
 	log.Println("Updating record...")
 	updateRecordSQL := `UPDATE records SET data = ? WHERE id = ?`

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -83,6 +84,64 @@ func (a *API) GetLastestRecordV2(w http.ResponseWriter, r *http.Request) {
 		logError(err)
 		return
 	}
+	err = writeJSON(w, record, http.StatusOK)
+	if err != nil {
+		err := writeError(w, fmt.Sprintf("record of id %v does not exist", idNumber), http.StatusBadRequest)
+		logError(err)
+		return
+	}
+}
+
+// GET /records/{id}?startTime={start}&endTime={end}
+// GetRecordsBetweenTimestamp retrieves the record.
+func (a *API) GetRecordsBetweenTimestampV2(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := mux.Vars(r)["id"]
+	startTimeString := r.URL.Query().Get("startTime")
+	endTimeString := r.URL.Query().Get("endTime")
+
+	idNumber, err := strconv.ParseInt(id, 10, 32)
+
+	if err != nil || idNumber <= 0 {
+		err := writeError(w, "invalid id; id must be a positive number", http.StatusBadRequest)
+		logError(err)
+		return
+	}
+
+	var startTime time.Time
+	if startTimeString != "" {
+		var err error
+		startTime, err = time.Parse(time.RFC3339, startTimeString)
+		if err != nil {
+			err := writeError(w, "invalid time format", http.StatusBadRequest)
+			logError(err)
+			return
+		}
+	}
+
+	var endTime time.Time
+	if startTimeString != "" {
+		var err error
+		endTime, err = time.Parse(time.RFC3339, endTimeString)
+		if err != nil {
+			err := writeError(w, "invalid time format", http.StatusBadRequest)
+			logError(err)
+			return
+		}
+	}
+
+	record, err := a.recordsV2.GetRecordsByIDBetweenTimestamp(
+		ctx,
+		int(idNumber),
+		startTime,
+		endTime,
+	)
+	if err != nil {
+		err := writeError(w, fmt.Sprintf("record of id %v does not exist", idNumber), http.StatusBadRequest)
+		logError(err)
+		return
+	}
+
 	err = writeJSON(w, record, http.StatusOK)
 	if err != nil {
 		err := writeError(w, fmt.Sprintf("record of id %v does not exist", idNumber), http.StatusBadRequest)
