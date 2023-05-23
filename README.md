@@ -126,3 +126,113 @@ backend must delete that key of the record.
 < Content-Type: application/json; charset=utf-8
 {"id":1,"data":{"status":"ok"}}
 ```
+
+## Here's the API documentation for the provided v2 routes:
+
+### Get Records
+- Endpoint: `/api/v2/records/{id}`
+- Method: GET
+- Description: Retrieves the records for the specified ID.
+- Parameters:
+  - `id` (path parameter): The ID of the records to retrieve.
+- Response:
+  - Status Code: 200 (OK)
+  - Body: JSON object representing the records.
+    Example response:
+  ```json
+  {
+    "records": [
+      {
+        "id": 1,
+        "data": {
+          "hello": "world"
+        },        
+        "created_at": "2023-05-23T18:28:51Z",
+        "deleted_at": "0001-01-01T00:00:00Z"
+      },
+      {
+        "id": 1,
+        "data": {
+          "hello": "world 2"
+        },
+        "created_at": "2023-05-23T18:28:51Z",
+        "deleted_at": "0001-01-01T00:00:00Z"
+      }
+    ]
+  }
+  ```
+
+### Get Latest Record
+- Endpoint: `/api/v2/record/{id}`
+- Method: GET
+- Description: Retrieves the latest record for the specified ID.
+- Parameters:
+  - `id` (path parameter): The ID of the record to retrieve.
+- Response:
+  - Status Code: 200 (OK)
+  - Body: JSON object representing the latest record.
+    Example response:
+  ```json
+    {
+    "id": 1,
+    "data": {
+        "hello": "world"
+    },        
+    "created_at": "2023-05-23T18:28:51Z",
+    "deleted_at": "0001-01-01T00:00:00Z"
+    }
+  ```
+
+### Get Records Between Timestamps
+- Endpoint: `/api/v2/records/{id}/{start}/{end}`
+- Method: GET
+- Description: Retrieves the records for the specified ID between the given timestamps.
+- Parameters:
+  - `id` (path parameter): The ID of the records to retrieve.
+  - `start` (path parameter): The start timestamp in RFC3339 format.
+  - `end` (path parameter): The end timestamp in RFC3339 format.
+- Response:
+  - Status Code: 200 (OK)
+  - Body: JSON object representing the records.
+  Example response:
+  ```json
+  {
+    "records": [
+      {
+        "id": 1,
+        "data": {
+          "hello": "world"
+        },        
+        "created_at": "2023-05-23T18:28:51Z",
+        "deleted_at": "0001-01-01T00:00:00Z"
+      },
+      {
+        "id": 1,
+        "data": {
+          "hello": "world 2"
+        },
+        "created_at": "2023-05-23T18:28:51Z",
+        "deleted_at": "0001-01-01T00:00:00Z"
+      }
+    ]
+  }
+  ```
+
+### Post Records
+- Endpoint: `/api/v2/records/{id}`
+- Method: POST
+- Description: Creates a new record for the specified ID.
+- Parameters:
+  - `id` (path parameter): The ID for which to create the record.
+- Request Body: JSON object representing the record to create.
+Example:
+```json
+{
+  "hello": "world"
+}
+```
+- Response:
+  - Status Code: 201 (Created)
+  - Body: JSON object representing the created record.
+
+TODO: All the APIs will in future require appropriate authentication and authorization to access the resources.
