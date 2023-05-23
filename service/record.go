@@ -17,6 +17,9 @@ type RecordService interface {
 	// GetRecord will retrieve an record.
 	GetRecord(ctx context.Context, id int) (entity.Record, error)
 
+	// GetLastestRecordByID will retrieve the lastest record.
+	GetLastestRecordByID(ctx context.Context, id int) (entity.Record, error)
+
 	// CreateRecord will insert a new record.
 	//
 	// If it a record with that id already exists it will fail.
@@ -80,4 +83,8 @@ func (s *InMemoryRecordService) UpdateRecord(ctx context.Context, id int, update
 	}
 
 	return entry.Copy(), nil
+}
+
+func (s *InMemoryRecordService) GetLastestRecordByID(ctx context.Context, id int) (entity.Record, error) {
+	return entity.Record{}, nil
 }
