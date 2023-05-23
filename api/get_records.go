@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -92,13 +93,13 @@ func (a *API) GetLastestRecordV2(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /records/{id}?startTime={start}&endTime={end}
+// GET /records/{id}/{start}/{end}
 // GetRecordsBetweenTimestamp retrieves the record.
 func (a *API) GetRecordsBetweenTimestampV2(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := mux.Vars(r)["id"]
-	startTimeString := r.URL.Query().Get("startTime")
-	endTimeString := r.URL.Query().Get("endTime")
+	startTimeString := mux.Vars(r)["start"]
+	endTimeString := mux.Vars(r)["end"]
 
 	idNumber, err := strconv.ParseInt(id, 10, 32)
 
@@ -129,7 +130,8 @@ func (a *API) GetRecordsBetweenTimestampV2(w http.ResponseWriter, r *http.Reques
 			return
 		}
 	}
-
+	log.Printf("start time: %v", startTime)
+	log.Printf("end time: %v", endTime)
 	record, err := a.recordsV2.GetRecordsByIDBetweenTimestamp(
 		ctx,
 		int(idNumber),

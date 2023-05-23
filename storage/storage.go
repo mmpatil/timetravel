@@ -12,7 +12,6 @@ import (
 )
 
 const databaseFile = "sqlite-database.db"
-const timestampFormat = "2006-01-02T15:04:05Z"
 
 type Storage struct {
 	db *sql.DB
@@ -26,6 +25,7 @@ func NewStorage() (*Storage, error) {
 	} else {
 		err = createDatabase()
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		log.Println(databaseFile, "created")
@@ -33,6 +33,7 @@ func NewStorage() (*Storage, error) {
 
 	db, err := sql.Open("sqlite3", "./"+databaseFile)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -44,18 +45,21 @@ func createDatabase() error {
 
 	file, err := os.Create(databaseFile) // Create SQLite file
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	file.Close()
 
 	db, err := sql.Open("sqlite3", "./"+databaseFile) // Open the created SQLite file
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	defer db.Close()
 
 	err = createTable(db)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -73,6 +77,7 @@ func createTable(db *sql.DB) error {
 	log.Println("Creating records table...")
 	_, err := db.Exec(createRecordsTableSQL) // Execute SQL Statement
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	log.Println("Records table created")
@@ -86,12 +91,14 @@ func (s *Storage) InsertRecord(id int, data string) (int, error) {
 
 	statement, err := s.db.Prepare(insertRecordSQL)
 	if err != nil {
+		log.Println(err)
 		return 0, err
 	}
 	defer statement.Close()
 
 	_, err = statement.Exec(id, data)
 	if err != nil {
+		log.Println(err)
 		return 0, err
 	}
 
@@ -104,12 +111,14 @@ func (s *Storage) GetRecordsByID(id int) ([]*entity.Record, error) {
 
 	statement, err := s.db.Prepare(getRecordSQL)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	defer statement.Close()
 	var records []*entity.Record
 	rows, err := statement.Query(id)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	for rows.Next() {
@@ -118,18 +127,15 @@ func (s *Storage) GetRecordsByID(id int) ([]*entity.Record, error) {
 		var nullableTime sql.NullTime
 		var timestampStr string
 		err = rows.Scan(&record.ID, &data, &timestampStr, &nullableTime)
-		log.Println(err)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
-		log.Println(timestampStr)
 		timestamp, err := time.Parse(time.RFC3339, timestampStr)
-		log.Println(err)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
-		log.Println(timestamp)
-		log.Println(data)
 		err = json.Unmarshal([]byte(data), &record.Data)
 		if err != nil {
 			log.Println(err)
@@ -158,16 +164,14 @@ func (s *Storage) GetLastestRecordByID(id int) (*entity.Record, error) {
 	err = row.Scan(&record.ID, &data, &timestampStr, &nullableTime)
 	log.Println(err)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	log.Println(timestampStr)
 	timestamp, err := time.Parse(time.RFC3339, timestampStr)
-	log.Println(err)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	log.Println(timestamp)
-	log.Println(data)
 	err = json.Unmarshal([]byte(data), &record.Data)
 	if err != nil {
 		log.Println(err)
@@ -179,17 +183,19 @@ func (s *Storage) GetLastestRecordByID(id int) (*entity.Record, error) {
 }
 
 func (s *Storage) GetRecordsByIDBetweenTimestamp(id int, startTime, endTime time.Time) ([]*entity.Record, error) {
-	log.Println("Getting record...")
+	log.Println("GetRecordsByIDBetweenTimestamp record...")
 	getRecordSQL := `SELECT id, data, created_at, deleted_at FROM records WHERE id = ? AND created_at BETWEEN ? AND ? ORDER BY created_at DESC`
 
 	statement, err := s.db.Prepare(getRecordSQL)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	defer statement.Close()
 	var records []*entity.Record
 	rows, err := statement.Query(id, startTime, endTime)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -199,18 +205,15 @@ func (s *Storage) GetRecordsByIDBetweenTimestamp(id int, startTime, endTime time
 		var nullableTime sql.NullTime
 		var timestampStr string
 		err = rows.Scan(&record.ID, &data, &timestampStr, &nullableTime)
-		log.Println(err)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
-		log.Println(timestampStr)
 		timestamp, err := time.Parse(time.RFC3339, timestampStr)
-		log.Println(err)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
-		log.Println(timestamp)
-		log.Println(data)
 		err = json.Unmarshal([]byte(data), &record.Data)
 		if err != nil {
 			log.Println(err)
@@ -228,12 +231,14 @@ func (s *Storage) UpdateRecord(id int, data string) (int, error) {
 
 	statement, err := s.db.Prepare(updateRecordSQL)
 	if err != nil {
+		log.Println(err)
 		return 0, err
 	}
 	defer statement.Close()
 
 	_, err = statement.Exec(data, id)
 	if err != nil {
+		log.Println(err)
 		return 0, err
 	}
 
@@ -246,12 +251,14 @@ func (s *Storage) DeleteRecord(id int) error {
 
 	statement, err := s.db.Prepare(deleteRecordSQL)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	defer statement.Close()
 
 	_, err = statement.Exec(id)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 

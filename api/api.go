@@ -20,10 +20,11 @@ func (a *API) CreateRoutes(routes *mux.Router) {
 	routes.Path("/records/{id}").HandlerFunc(a.PostRecords).Methods("POST")
 }
 
-// generates all api routes
+// generates all v2 api routes
 func (a *API) CreateRoutesV2(routes *mux.Router) {
 	routes.Path("/records/{id}").HandlerFunc(a.GetRecordsV2).Methods("GET")
 	routes.Path("/record/{id}").HandlerFunc(a.GetLastestRecordV2).Methods("GET")
-	routes.Path("/records/{id}?startTime={start}&endTime={end}").HandlerFunc(a.GetRecordsBetweenTimestampV2).Methods("GET")
+	routes.Path("/records/{id}/{start}/{end}").HandlerFunc(a.GetRecordsBetweenTimestampV2).Methods("GET")
+	// routes.Path("/records/{id}/from?startTime={start}&endTime={end}").HandlerFunc(a.GetRecordsBetweenTimestampV2).Methods("GET")
 	routes.Path("/records/{id}").HandlerFunc(a.PostRecordsV2).Methods("POST")
 }
